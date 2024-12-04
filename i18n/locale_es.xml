@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<l10n>
+    <translationContributors></translationContributors>
+    <locale>es</locale>
+
+    <elements>
+        <e k="ps_x1" v="PlayerSpeed: Velocidad normal"/>
+        <e k="ps_x3" v="PlayerSpeed: Velocidad x3"/>
+        <e k="ps_x8" v="PlayerSpeed: Velocidad x8"/>
+        <e k="ps_x15" v="PlayerSpeed: Velocidad x15"/>
+        <e k="ps_slow07" v="PlayerSpeed: Velocidad x0.7"/>
+        <e k="ps_slow05" v="PlayerSpeed: Velocidad x0.5"/>
+        <e k="ps_slow02" v="PlayerSpeed: Velocidad x0.2"/>
+        <e k="ps_othermod" v="La velocidad no está controlada por PlayerSpeed"/>
+
+        <e k="input_SPEEDMINUS" v="PlayerSpeed: Reducir la velocidad"/>
+        <e k="input_SPEEDPLUS" v="PlayerSpeed: Aumenta la velocidad"/>
+    </elements>
+</l10n>

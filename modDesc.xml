@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<modDesc descVersion="93">
+	<author>*TurboStar*</author>
+	<version>1.0.0.0</version>
+	<title>
+		<en>Player Speed</en>
+		<de>Spieler Geschwindigkeit</de>
+	</title>
+	<description>
+		<en><![CDATA[This mod allows you to set different farmer's movement speeds.
+Available speeds: x0.2, x0.5, x0.7, standard, x3, x8, x15
+
+Hotkeys:
+- Increase the speed with keyboard B
+- Decrease the speed with keyboard V
+
+Warning: you could encounter visual glitches, but they should not affect the performance.
+]]>
+		</en>
+		<de><![CDATA[Mit diesem Mod können Sie die Bewegungsgeschwindigkeit der Bauern unterschiedlich einstellen.
+Verfügbare Geschwindigkeiten: x0.2, x0.5, x0.7, standard, x3, x8, x15
+
+Tastenkombinationen:
+- Erhöhen Sie die Geschwindigkeit mit der Tastatur B
+- Verringern Sie die Geschwindigkeit mit der Tastatur V
+
+Achtung: Es kann zu visuellen Störungen kommen, die aber die Leistung nicht beeinträchtigen sollten.
+]]>
+		</de>
+		<fr><![CDATA[Ce mod vous permet de définir la vitesse de déplacement des différents fermiers.
+Vitesses disponibles: x0.2, x0.5, x0.7, standard, x3, x8, x15
+
+Touches de raccourci:
+- Augmenter la vitesse avec le clavier B
+- Diminuer la vitesse avec le clavier V
+
+Avertissement: vous pourriez rencontrer des problèmes visuels, mais ils ne devraient pas affecter la performance.
+]]>
+		</fr>
+	</description>
+
+	<iconFilename>icon_playerSpeed.png</iconFilename>
+	<l10n filenamePrefix="i18n/locale" />
+	<multiplayer supported="true" />
+	<extraSourceFiles>
+		<sourceFile filename="PlayerSpeed.lua" />
+	</extraSourceFiles>
+
+	<actions>
+		<action name="SPEEDMINUS" />
+		<action name="SPEEDPLUS" />
+	</actions>
+	<inputBinding>
+		<actionBinding action="SPEEDMINUS">
+			<binding device="KB_MOUSE_DEFAULT" input="KEY_v" />
+		</actionBinding>
+		<actionBinding action="SPEEDPLUS">
+			<binding device="KB_MOUSE_DEFAULT" input="KEY_b" />
+		</actionBinding>
+	</inputBinding>
+</modDesc>
