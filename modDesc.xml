@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<modDesc descVersion="93">
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="94" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://validation.gdn.giants-software.com/xml/fs25/modDesc.xsd">
 	<author>*TurboStar*</author>
-	<version>1.0.0.0</version>
+	<version>1.1.0.0</version>
 	<title>
 		<en>Player Speed</en>
 		<de>Spieler Geschwindigkeit</de>
@@ -14,7 +14,12 @@ Hotkeys:
 - Increase the speed with keyboard B
 - Decrease the speed with keyboard V
 
-Warning: you could encounter visual glitches, but they should not affect the performance.
+Warnings: 
+- you could encounter visual glitches, but they should not affect the performance nor savegame;
+- it is suggested to change the player speed while the farmer is not moving.
+
+Changelog v1.1.0.0:
+- Fix slow start and stop with high speeds
 ]]>
 		</en>
 		<de><![CDATA[Mit diesem Mod können Sie die Bewegungsgeschwindigkeit der Bauern unterschiedlich einstellen.
@@ -24,7 +29,12 @@ Tastenkombinationen:
 - Erhöhen Sie die Geschwindigkeit mit der Tastatur B
 - Verringern Sie die Geschwindigkeit mit der Tastatur V
 
-Achtung: Es kann zu visuellen Störungen kommen, die aber die Leistung nicht beeinträchtigen sollten.
+Warnungen: 
+- Es kann zu visuellen Störungen kommen, die aber weder die Leistung noch den Spielstand beeinträchtigen sollten;
+- es wird empfohlen, die Geschwindigkeit des Spielers zu ändern, wenn sich der Bauer nicht bewegt.
+
+Änderungsliste v1.1.0.0:
+- Behebung des langsamen Starts und Stopps bei hohen Geschwindigkeiten
 ]]>
 		</de>
 		<fr><![CDATA[Ce mod vous permet de définir la vitesse de déplacement des différents fermiers.
@@ -34,7 +44,12 @@ Touches de raccourci:
 - Augmenter la vitesse avec le clavier B
 - Diminuer la vitesse avec le clavier V
 
-Avertissement: vous pourriez rencontrer des problèmes visuels, mais ils ne devraient pas affecter la performance.
+Avertissements : 
+- il est possible que vous rencontriez des problèmes visuels, mais ils ne devraient pas affecter les performances ni les sauvegardes ;
+- il est conseillé de modifier la vitesse du joueur lorsque le fermier ne se déplace pas.
+
+Changelog v1.1.0.0 :
+- Correction du démarrage lent et de l'arrêt à grande vitesse
 ]]>
 		</fr>
 	</description>
