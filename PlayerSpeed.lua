@@ -3,10 +3,13 @@
 -- FS17 refactor, FS19, FS22 and FS25 by *TurboStar*
 
 -- v1.0.0.0  		Initial FS25 release
+-- v1.1.0.0 		Fix slow start and stop with high speeds
 
 PlayerSpeed = {}
 
 function PlayerSpeed:loadMap()
+	self.ACC = PlayerMover.ACCELERATION or 16.0
+	self.DEC = PlayerMover.DECELERATION or 10.0
 	self.SPEEDS = {0.2, 0.5, 0.7, 1.0, 3.0, 8.0, 15.0} -- ratio
 	self.SPEEDS_LENGTH = #self.SPEEDS
 	self.TEXTS = {"ps_slow02", "ps_slow05", "ps_slow07", "ps_x1", "ps_x3", "ps_x8", "ps_x15", ["other"] = "ps_othermod"}
@@ -40,12 +43,14 @@ PlayerInputComponent.unregisterActionEvents = Utils.appendedFunction(PlayerInput
 function PlayerSpeed:reduceSpeed(actionName, keyStatus)
 	if (self.cont == 1) then return end
 	self.cont = self.cont - 1
+	PlayerSpeed.setAccDec(math.max(1.0, self.SPEEDS[self.cont]))
 	-- g_inputBinding.events[PlayerSpeed.eventIdReduce].callbackState is -1 here
 end
 
 function PlayerSpeed:incrementSpeed(actionName, keyStatus)
 	if (self.cont == self.SPEEDS_LENGTH) then return end
 	self.cont = self.cont + 1
+	PlayerSpeed.setAccDec(math.max(1.0, self.SPEEDS[self.cont]))
 	-- g_inputBinding.events[PlayerSpeed.eventIdIncrease].callbackState is 1 here
 end
 
@@ -72,6 +77,13 @@ function PlayerSpeed:update(dt, isActiveForInput, isSelected)
 		g_currentMission:addExtraPrintText(g_i18n:getText(self.TEXTS[self.cont]))
 	elseif self.TEXTS and self.TEXTS ~= nil and self.TEXTS["other"] then
 		g_currentMission:addExtraPrintText(g_i18n:getText(self.TEXTS["other"]))
+	end
+end
+
+function PlayerSpeed.setAccDec(mltp)
+	if PlayerSpeed and mltp then
+		PlayerMover.ACCELERATION = PlayerSpeed.ACC * mltp
+		PlayerMover.DECELERATION = PlayerSpeed.DEC * mltp
 	end
 end
 
