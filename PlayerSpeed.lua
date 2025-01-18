@@ -10,10 +10,10 @@ PlayerSpeed = {}
 function PlayerSpeed:loadMap()
 	self.ACC = PlayerMover.ACCELERATION or 16.0
 	self.DEC = PlayerMover.DECELERATION or 10.0
-	self.SPEEDS = {0.2, 0.5, 0.7, 1.0, 3.0, 8.0, 15.0} -- ratio
-	self.SPEEDS_LENGTH = #self.SPEEDS
+	self.RATIOS = {0.2, 0.5, 0.7, 1.0, 3.0, 8.0, 15.0} -- ratio
+	self.RATIOS_LEN = #self.RATIOS
 	self.TEXTS = {"ps_slow02", "ps_slow05", "ps_slow07", "ps_x1", "ps_x3", "ps_x8", "ps_x15", ["other"] = "ps_othermod"}
-	self.cont = 4 -- It starts with default speed
+	self.cont = 4 -- It starts with default ratio
 	self.eventIdReduce, self.eventIdIncrease = nil, nil
 	self.errorDisplayed, self.firstTime = false, true
 end
@@ -43,14 +43,14 @@ PlayerInputComponent.unregisterActionEvents = Utils.appendedFunction(PlayerInput
 function PlayerSpeed:reduceSpeed(actionName, keyStatus)
 	if (self.cont == 1) then return end
 	self.cont = self.cont - 1
-	PlayerSpeed.setAccDec(math.max(1.0, self.SPEEDS[self.cont]))
+	PlayerSpeed.setAccDec(math.max(1.0, self.RATIOS[self.cont]))
 	-- g_inputBinding.events[PlayerSpeed.eventIdReduce].callbackState is -1 here
 end
 
 function PlayerSpeed:incrementSpeed(actionName, keyStatus)
-	if (self.cont == self.SPEEDS_LENGTH) then return end
+	if (self.cont == self.RATIOS_LEN) then return end
 	self.cont = self.cont + 1
-	PlayerSpeed.setAccDec(math.max(1.0, self.SPEEDS[self.cont]))
+	PlayerSpeed.setAccDec(math.max(1.0, self.RATIOS[self.cont]))
 	-- g_inputBinding.events[PlayerSpeed.eventIdIncrease].callbackState is 1 here
 end
 
@@ -60,7 +60,7 @@ function PlayerSpeed:update(dt, isActiveForInput, isSelected)
         return
     end
 
-	if (self.cont ~= nil and (self.cont < 1 or self.cont > self.SPEEDS_LENGTH)) or self.cont == nil then
+	if (self.cont ~= nil and (self.cont < 1 or self.cont > self.RATIOS_LEN)) or self.cont == nil then
 		if not self.errorDisplayed then
 			print("PlayerSpeed: something is wrong on PlayerSpeed.cont variable... Aborting functionality. Please report your log.txt")
 			self.errorDisplayed = true
@@ -70,8 +70,8 @@ function PlayerSpeed:update(dt, isActiveForInput, isSelected)
 
 	g_inputBinding:setActionEventActive(self.eventIdReduce, self.cont ~= 1)
 	g_inputBinding:setActionEventTextVisibility(self.eventIdReduce, self.cont ~= 1)
-	g_inputBinding:setActionEventActive(self.eventIdIncrease, self.cont ~= self.SPEEDS_LENGTH)
-	g_inputBinding:setActionEventTextVisibility(self.eventIdIncrease, self.cont ~= self.SPEEDS_LENGTH)
+	g_inputBinding:setActionEventActive(self.eventIdIncrease, self.cont ~= self.RATIOS_LEN)
+	g_inputBinding:setActionEventTextVisibility(self.eventIdIncrease, self.cont ~= self.RATIOS_LEN)
 
 	if self.cont ~= nil and self.TEXTS ~= nil and self.TEXTS[self.cont] ~= nil then
 		g_currentMission:addExtraPrintText(g_i18n:getText(self.TEXTS[self.cont]))
@@ -90,8 +90,8 @@ end
 function PlayerSpeed:speedWalk(superFunc, directionX, directionY)
 	-- print("speed walk")
 	local speedX, speedY = superFunc(self, directionX, directionY)
-	if PlayerSpeed and PlayerSpeed.SPEEDS and PlayerSpeed.cont then
-		return speedX*PlayerSpeed.SPEEDS[PlayerSpeed.cont], speedY*PlayerSpeed.SPEEDS[PlayerSpeed.cont]
+	if PlayerSpeed and PlayerSpeed.RATIOS and PlayerSpeed.cont then
+		return speedX*PlayerSpeed.RATIOS[PlayerSpeed.cont], speedY*PlayerSpeed.RATIOS[PlayerSpeed.cont]
 	end
 	return speedX, speedY
 end
@@ -100,8 +100,8 @@ PlayerStateWalk.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(P
 function PlayerSpeed:speedJump(superFunc, directionX, directionY)
 	-- print("speed jump")
 	local speedX, speedY = superFunc(self, directionX, directionY)
-	if PlayerSpeed and PlayerSpeed.SPEEDS and PlayerSpeed.cont then
-		return speedX*PlayerSpeed.SPEEDS[PlayerSpeed.cont], speedY*PlayerSpeed.SPEEDS[PlayerSpeed.cont]
+	if PlayerSpeed and PlayerSpeed.RATIOS and PlayerSpeed.cont then
+		return speedX*PlayerSpeed.RATIOS[PlayerSpeed.cont], speedY*PlayerSpeed.RATIOS[PlayerSpeed.cont]
 	end
 	return speedX, speedY
 end
@@ -110,8 +110,8 @@ PlayerStateJump.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(P
 function PlayerSpeed:speedCrouch(superFunc, directionX, directionY)
 	-- print("speed crouch")
 	local speedX, speedY = superFunc(self, directionX, directionY)
-	if PlayerSpeed and PlayerSpeed.SPEEDS and PlayerSpeed.cont then
-		return speedX*PlayerSpeed.SPEEDS[PlayerSpeed.cont], speedY*PlayerSpeed.SPEEDS[PlayerSpeed.cont]
+	if PlayerSpeed and PlayerSpeed.RATIOS and PlayerSpeed.cont then
+		return speedX*PlayerSpeed.RATIOS[PlayerSpeed.cont], speedY*PlayerSpeed.RATIOS[PlayerSpeed.cont]
 	end
 	return speedX, speedY
 end
@@ -120,8 +120,8 @@ PlayerStateCrouch.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction
 function PlayerSpeed:speedFall(superFunc, directionX, directionY)
 	-- print("speed fall")
 	local speedX, speedY = superFunc(self, directionX, directionY)
-	if PlayerSpeed and PlayerSpeed.SPEEDS and PlayerSpeed.cont then
-		return speedX*PlayerSpeed.SPEEDS[PlayerSpeed.cont], speedY*PlayerSpeed.SPEEDS[PlayerSpeed.cont]
+	if PlayerSpeed and PlayerSpeed.RATIOS and PlayerSpeed.cont then
+		return speedX*PlayerSpeed.RATIOS[PlayerSpeed.cont], speedY*PlayerSpeed.RATIOS[PlayerSpeed.cont]
 	end
 	return speedX, speedY
 end
@@ -130,8 +130,8 @@ PlayerStateFall.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(P
 function PlayerSpeed:speedSwim(superFunc, directionX, directionY)
 	-- print("speed swim")
 	local speedX, speedY = superFunc(self, directionX, directionY)
-	if PlayerSpeed and PlayerSpeed.SPEEDS and PlayerSpeed.cont then
-		return speedX*PlayerSpeed.SPEEDS[PlayerSpeed.cont], speedY*PlayerSpeed.SPEEDS[PlayerSpeed.cont]
+	if PlayerSpeed and PlayerSpeed.RATIOS and PlayerSpeed.cont then
+		return speedX*PlayerSpeed.RATIOS[PlayerSpeed.cont], speedY*PlayerSpeed.RATIOS[PlayerSpeed.cont]
 	end
 	return speedX, speedY
 end
