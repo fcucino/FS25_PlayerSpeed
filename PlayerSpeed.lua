@@ -43,14 +43,14 @@ PlayerInputComponent.unregisterActionEvents = Utils.appendedFunction(PlayerInput
 function PlayerSpeed:reduceSpeed(actionName, keyStatus)
 	if (self.cont == 1) then return end
 	self.cont = self.cont - 1
-	PlayerSpeed.setAccDec(math.max(1.0, self.RATIOS[self.cont]))
+	self.setAccDec(math.max(1.0, self.RATIOS[self.cont]))
 	-- g_inputBinding.events[PlayerSpeed.eventIdReduce].callbackState is -1 here
 end
 
 function PlayerSpeed:incrementSpeed(actionName, keyStatus)
 	if (self.cont == self.RATIOS_LEN) then return end
 	self.cont = self.cont + 1
-	PlayerSpeed.setAccDec(math.max(1.0, self.RATIOS[self.cont]))
+	self.setAccDec(math.max(1.0, self.RATIOS[self.cont]))
 	-- g_inputBinding.events[PlayerSpeed.eventIdIncrease].callbackState is 1 here
 end
 
@@ -62,7 +62,7 @@ function PlayerSpeed:update(dt, isActiveForInput, isSelected)
 
 	if (self.cont ~= nil and (self.cont < 1 or self.cont > self.RATIOS_LEN)) or self.cont == nil then
 		if not self.errorDisplayed then
-			print("PlayerSpeed: something is wrong on PlayerSpeed.cont variable... Aborting functionality. Please report your log.txt")
+			print("PlayerSpeed: something is wrong on PlayerSpeed... Aborting functionality. Please report your log.txt")
 			self.errorDisplayed = true
 		end
 		return
@@ -88,7 +88,6 @@ function PlayerSpeed.setAccDec(mltp)
 end
 
 function PlayerSpeed:speedWalk(superFunc, directionX, directionY)
-	-- print("speed walk")
 	local speedX, speedY = superFunc(self, directionX, directionY)
 	if PlayerSpeed and PlayerSpeed.RATIOS and PlayerSpeed.cont then
 		return speedX*PlayerSpeed.RATIOS[PlayerSpeed.cont], speedY*PlayerSpeed.RATIOS[PlayerSpeed.cont]
@@ -98,7 +97,6 @@ end
 PlayerStateWalk.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(PlayerStateWalk.calculateDesiredHorizontalVelocity, PlayerSpeed.speedWalk)
 
 function PlayerSpeed:speedJump(superFunc, directionX, directionY)
-	-- print("speed jump")
 	local speedX, speedY = superFunc(self, directionX, directionY)
 	if PlayerSpeed and PlayerSpeed.RATIOS and PlayerSpeed.cont then
 		return speedX*PlayerSpeed.RATIOS[PlayerSpeed.cont], speedY*PlayerSpeed.RATIOS[PlayerSpeed.cont]
@@ -108,7 +106,6 @@ end
 PlayerStateJump.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(PlayerStateJump.calculateDesiredHorizontalVelocity, PlayerSpeed.speedJump)
 
 function PlayerSpeed:speedCrouch(superFunc, directionX, directionY)
-	-- print("speed crouch")
 	local speedX, speedY = superFunc(self, directionX, directionY)
 	if PlayerSpeed and PlayerSpeed.RATIOS and PlayerSpeed.cont then
 		return speedX*PlayerSpeed.RATIOS[PlayerSpeed.cont], speedY*PlayerSpeed.RATIOS[PlayerSpeed.cont]
@@ -118,7 +115,6 @@ end
 PlayerStateCrouch.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(PlayerStateCrouch.calculateDesiredHorizontalVelocity, PlayerSpeed.speedCrouch)
 
 function PlayerSpeed:speedFall(superFunc, directionX, directionY)
-	-- print("speed fall")
 	local speedX, speedY = superFunc(self, directionX, directionY)
 	if PlayerSpeed and PlayerSpeed.RATIOS and PlayerSpeed.cont then
 		return speedX*PlayerSpeed.RATIOS[PlayerSpeed.cont], speedY*PlayerSpeed.RATIOS[PlayerSpeed.cont]
@@ -128,7 +124,6 @@ end
 PlayerStateFall.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(PlayerStateFall.calculateDesiredHorizontalVelocity, PlayerSpeed.speedFall)
 
 function PlayerSpeed:speedSwim(superFunc, directionX, directionY)
-	-- print("speed swim")
 	local speedX, speedY = superFunc(self, directionX, directionY)
 	if PlayerSpeed and PlayerSpeed.RATIOS and PlayerSpeed.cont then
 		return speedX*PlayerSpeed.RATIOS[PlayerSpeed.cont], speedY*PlayerSpeed.RATIOS[PlayerSpeed.cont]

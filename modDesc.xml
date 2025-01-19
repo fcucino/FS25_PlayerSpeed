@@ -14,12 +14,14 @@ Hotkeys:
 - Increase the speed with keyboard B
 - Decrease the speed with keyboard V
 
-Warnings: 
+Warnings:
 - you could encounter visual glitches, but they should not affect the performance nor savegame;
 - it is suggested to change the player speed while the farmer is not moving.
 
 Changelog v1.1.0.0:
 - Fix slow start and stop with high speeds
+
+Github: https://github.com/fcucino/FS25_PlayerSpeed
 ]]>
 		</en>
 		<de><![CDATA[Mit diesem Mod können Sie die Bewegungsgeschwindigkeit der Bauern unterschiedlich einstellen.
@@ -29,12 +31,14 @@ Tastenkombinationen:
 - Erhöhen Sie die Geschwindigkeit mit der Tastatur B
 - Verringern Sie die Geschwindigkeit mit der Tastatur V
 
-Warnungen: 
+Warnungen:
 - Es kann zu visuellen Störungen kommen, die aber weder die Leistung noch den Spielstand beeinträchtigen sollten;
 - es wird empfohlen, die Geschwindigkeit des Spielers zu ändern, wenn sich der Bauer nicht bewegt.
 
 Änderungsliste v1.1.0.0:
 - Behebung des langsamen Starts und Stopps bei hohen Geschwindigkeiten
+
+Github: https://github.com/fcucino/FS25_PlayerSpeed
 ]]>
 		</de>
 		<fr><![CDATA[Ce mod vous permet de définir la vitesse de déplacement des différents fermiers.
@@ -44,12 +48,14 @@ Touches de raccourci:
 - Augmenter la vitesse avec le clavier B
 - Diminuer la vitesse avec le clavier V
 
-Avertissements : 
+Avertissements:
 - il est possible que vous rencontriez des problèmes visuels, mais ils ne devraient pas affecter les performances ni les sauvegardes ;
 - il est conseillé de modifier la vitesse du joueur lorsque le fermier ne se déplace pas.
 
-Changelog v1.1.0.0 :
+Changelog v1.1.0.0:
 - Correction du démarrage lent et de l'arrêt à grande vitesse
+
+Github: https://github.com/fcucino/FS25_PlayerSpeed
 ]]>
 		</fr>
 	</description>
