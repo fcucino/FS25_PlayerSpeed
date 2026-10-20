@@ -65,6 +65,7 @@ Github: https://github.com/fcucino/FS25_PlayerSpeed
 	<multiplayer supported="true" />
 	<extraSourceFiles>
 		<sourceFile filename="PlayerSpeed.lua" />
+		<sourceFile filename="PlayerSpeedListener.lua" />
 	</extraSourceFiles>
 
 	<actions>
