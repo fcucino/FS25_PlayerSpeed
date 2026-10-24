@@ -148,18 +148,19 @@ function PlayerSpeed:update(dt)
 	g_currentMission:addExtraPrintText(self.texts[self.cont])
 end
 
--- Base game hooks are installed once and forward to the current instance
-PlayerInputComponent.registerActionEvents = Utils.appendedFunction(PlayerInputComponent.registerActionEvents, function(inputComponent)
+-- Base game hook functions forward to the current instance
+
+function PlayerSpeed.onRegisterActionEvents(inputComponent)
 	if g_playerSpeed ~= nil and inputComponent.player.isOwner then
 		g_playerSpeed:registerActionEvents()
 	end
-end)
+end
 
-PlayerInputComponent.unregisterActionEvents = Utils.appendedFunction(PlayerInputComponent.unregisterActionEvents, function(inputComponent)
+function PlayerSpeed.onUnregisterActionEvents(inputComponent)
 	if g_playerSpeed ~= nil and inputComponent.player.isOwner then
 		g_playerSpeed:unregisterActionEvents()
 	end
-end)
+end
 
 -- Shared override for every player movement state
 function PlayerSpeed.scaleVelocity(state, superFunc, directionX, directionY)
@@ -171,10 +172,6 @@ function PlayerSpeed.scaleVelocity(state, superFunc, directionX, directionY)
 	return speedX, speedY
 end
 
-for _, stateClass in ipairs({PlayerStateWalk, PlayerStateJump, PlayerStateCrouch, PlayerStateFall, PlayerStateSwim}) do
-	stateClass.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(stateClass.calculateDesiredHorizontalVelocity, PlayerSpeed.scaleVelocity)
-end
-
 -- Faster start and stop at high ratios, only for the local player
 function PlayerSpeed.scaleAcceleration(mover, superFunc)
 	local value = superFunc(mover)
@@ -183,9 +180,6 @@ function PlayerSpeed.scaleAcceleration(mover, superFunc)
 	end
 	return value
 end
-
-PlayerMover.getAcceleration = Utils.overwrittenFunction(PlayerMover.getAcceleration, PlayerSpeed.scaleAcceleration)
-PlayerMover.getDeceleration = Utils.overwrittenFunction(PlayerMover.getDeceleration, PlayerSpeed.scaleAcceleration)
 
 -- Ground walk/run speed for the current input
 local function calculateGroundSpeed(player, walkState)
@@ -220,4 +214,31 @@ function PlayerSpeed.syncFlightVelocity(mover, superFunc, dt)
 	mover.isFlightActive = true
 end
 
-PlayerMover.updateHorizontalVelocity = Utils.overwrittenFunction(PlayerMover.updateHorizontalVelocity, PlayerSpeed.syncFlightVelocity)
+-- Base game hooks are installed only once, also when this file is sourced again (psReload, see PlayerSpeedDev.lua).
+-- They look up the PlayerSpeed functions on every call, so a reload replaces the code without wrapping twice.
+if not g_playerSpeedHooksInstalled then
+	g_playerSpeedHooksInstalled = true
+
+	PlayerInputComponent.registerActionEvents = Utils.appendedFunction(PlayerInputComponent.registerActionEvents, function(...)
+		return PlayerSpeed.onRegisterActionEvents(...)
+	end)
+	PlayerInputComponent.unregisterActionEvents = Utils.appendedFunction(PlayerInputComponent.unregisterActionEvents, function(...)
+		return PlayerSpeed.onUnregisterActionEvents(...)
+	end)
+
+	for _, stateClass in ipairs({PlayerStateWalk, PlayerStateJump, PlayerStateCrouch, PlayerStateFall, PlayerStateSwim}) do
+		stateClass.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(stateClass.calculateDesiredHorizontalVelocity, function(...)
+			return PlayerSpeed.scaleVelocity(...)
+		end)
+	end
+
+	local function scaleAcceleration(...)
+		return PlayerSpeed.scaleAcceleration(...)
+	end
+	PlayerMover.getAcceleration = Utils.overwrittenFunction(PlayerMover.getAcceleration, scaleAcceleration)
+	PlayerMover.getDeceleration = Utils.overwrittenFunction(PlayerMover.getDeceleration, scaleAcceleration)
+
+	PlayerMover.updateHorizontalVelocity = Utils.overwrittenFunction(PlayerMover.updateHorizontalVelocity, function(...)
+		return PlayerSpeed.syncFlightVelocity(...)
+	end)
+end
