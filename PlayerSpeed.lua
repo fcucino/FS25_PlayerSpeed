@@ -9,7 +9,7 @@ PlayerSpeed = {}
 PlayerSpeed.DEFAULT_RATIOS = {0.2, 0.5, 0.7, 1.0, 3.0, 8.0, 15.0} -- ratio
 PlayerSpeed.STANDARD_TEXT_KEY = "ps_x1" -- text of DEFAULT_RATIO
 PlayerSpeed.CUSTOM_TEXT_KEY = "ps_custom" -- text of any other ratio
-PlayerSpeed.PAUSED_TEXT_KEY = "ps_othermod" -- text while super speed is on
+PlayerSpeed.PAUSED_TEXT_KEY = "ps_othermod" -- text while the ratio is paused
 PlayerSpeed.DEFAULT_RATIO = 1.0
 PlayerSpeed.MAX_RATIO = 100.0
 PlayerSpeed.MAX_RATIOS = 10 -- ratios read from the settings file
@@ -124,6 +124,20 @@ end
 -- so the ratio is paused while it is on
 local function isSuperSpeedActive(player)
 	return player ~= nil and player.isOwner and player.toggleSuperSpeedCommand ~= nil and player.toggleSuperSpeedCommand.value == true
+end
+
+-- Some hand tools (e.g. modded chainsaws) make the farmer faster on their own
+local function hasFastHandTool(player)
+	local handTool = player ~= nil and player.isOwner and player:getHeldHandTool(true)
+	if not handTool then
+		return false
+	end
+	return (handTool.walkMultiplier or 1) > 1 or (handTool.runMultiplier or 1) > 1
+end
+
+-- The ratio is paused while something else already makes the farmer faster
+local function isRatioPaused(player)
+	return isSuperSpeedActive(player) or hasFastHandTool(player)
 end
 
 -- Horizontal speed of the player (also correct in flight mode, see syncFlightVelocity)
@@ -242,9 +256,9 @@ function PlayerSpeed:delete()
 	end
 end
 
--- Ratio applied to the local player: the selected one, or 1 while super speed is on
+-- Ratio applied to the local player: the selected one, or 1 while paused (see isRatioPaused)
 function PlayerSpeed:getRatio()
-	if isSuperSpeedActive(g_localPlayer) then
+	if isRatioPaused(g_localPlayer) then
 		return 1.0
 	end
 	return self.ratio
@@ -351,14 +365,14 @@ function PlayerSpeed:update(dt)
 
 	-- Apply a deferred lower acceleration once the player has stopped (or left the on-foot state)
 	updateAccDecMltp(self, player)
-	-- Also catches super speed being switched on or off
+	-- Also catches the ratio being paused or resumed
 	publishIfChanged(self)
 
 	if player == nil or (g_gui ~= nil and g_gui:getIsGuiVisible()) then
 		return
 	end
 
-	if isSuperSpeedActive(player) then
+	if isRatioPaused(player) then
 		g_currentMission:addExtraPrintText(self.pausedText)
 	else
 		g_currentMission:addExtraPrintText(self.texts[self.cont])
@@ -389,7 +403,7 @@ end
 function PlayerSpeed.scaleVelocity(state, superFunc, directionX, directionY)
 	local speedX, speedY = superFunc(state, directionX, directionY)
 	local ratio = g_playerSpeed ~= nil and g_playerSpeed.ratio
-	if ratio and not isSuperSpeedActive(state.player) then
+	if ratio and not isRatioPaused(state.player) then
 		return speedX*ratio, speedY*ratio
 	end
 	return speedX, speedY
@@ -398,10 +412,19 @@ end
 -- Faster start and stop at high ratios, only for the local player
 function PlayerSpeed.scaleAcceleration(mover, superFunc)
 	local value = superFunc(mover)
-	if g_playerSpeed ~= nil and mover.player.isOwner and not isSuperSpeedActive(mover.player) then
+	if g_playerSpeed ~= nil and mover.player.isOwner and not isRatioPaused(mover.player) then
 		return value * g_playerSpeed.accDecMltp
 	end
 	return value
+end
+
+-- Hand tools that block running (e.g. chainsaws) still let the local player run
+function PlayerSpeed.allowRunning(player, superFunc)
+	local runMultiplier = superFunc(player)
+	if runMultiplier <= 0 and g_playerSpeed ~= nil and player.isOwner then
+		return 1
+	end
+	return runMultiplier
 end
 
 -- Ground walk/run speed for the current input
@@ -422,7 +445,7 @@ end
 -- with the same acceleration and deceleration as on foot
 function PlayerSpeed.syncFlightVelocity(mover, superFunc, dt)
 	local player = mover.player
-	if not mover.isFlightActive or g_playerSpeed == nil or not player.isOwner or player.inputComponent == nil or isSuperSpeedActive(player) then
+	if not mover.isFlightActive or g_playerSpeed == nil or not player.isOwner or player.inputComponent == nil or isRatioPaused(player) then
 		return superFunc(mover, dt)
 	end
 	local walkState = player.stateMachine.states.onFoot.states.walking
@@ -453,6 +476,10 @@ if not g_playerSpeedHooksInstalled then
 	-- Runs once the save has finished, so an error here can't break the save itself
 	SavegameController.onSaveComplete = Utils.appendedFunction(SavegameController.onSaveComplete, function(...)
 		return PlayerSpeed.onSavegameSaved(...)
+	end)
+
+	Player.getRunMultiplier = Utils.overwrittenFunction(Player.getRunMultiplier, function(...)
+		return PlayerSpeed.allowRunning(...)
 	end)
 
 	for _, stateClass in ipairs({PlayerStateWalk, PlayerStateJump, PlayerStateCrouch, PlayerStateFall, PlayerStateSwim}) do

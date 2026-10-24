@@ -37,7 +37,7 @@ At the first start the mod creates `modSettings/FS25_PlayerSpeed.xml` in the gam
 
 ## For mod authors
 PlayerSpeed publishes `MessageType.PLAYER_SPEED_CHANGED` through `g_messageCenter` whenever the ratio applied to the local farmer changes, with two arguments:
-- `isHandling`: `true` when PlayerSpeed changes the farmer speed (ratio other than 1). It is `false` at the standard speed, while the game's super speed is on (PlayerSpeed pauses then) and when the savegame is closed.
+- `isHandling`: `true` when PlayerSpeed changes the farmer speed (ratio other than 1). It is `false` at the standard speed, while the game's super speed is on or a hand tool that makes the farmer faster is held (PlayerSpeed pauses then) and when the savegame is closed.
 - `ratio`: the applied ratio (1 when not handling).
 
 ```lua
