@@ -379,8 +379,8 @@ function PlayerSpeed.onUnregisterActionEvents(inputComponent)
 	end
 end
 
-function PlayerSpeed.onSavegameSaved()
-	if g_playerSpeed ~= nil then
+function PlayerSpeed.onSavegameSaved(controller, errorCode)
+	if g_playerSpeed ~= nil and errorCode == Savegame.ERROR_OK then
 		g_playerSpeed:saveSettings()
 	end
 end
@@ -449,12 +449,11 @@ if not g_playerSpeedHooksInstalled then
 		return PlayerSpeed.onUnregisterActionEvents(...)
 	end)
 
-	-- Remember the selected ratio whenever the game is saved
-	if FSCareerMissionInfo ~= nil then
-		FSCareerMissionInfo.saveToXMLFile = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile, function(...)
-			return PlayerSpeed.onSavegameSaved(...)
-		end)
-	end
+	-- Remember the selected ratio whenever the game is saved successfully.
+	-- Runs once the save has finished, so an error here can't break the save itself
+	SavegameController.onSaveComplete = Utils.appendedFunction(SavegameController.onSaveComplete, function(...)
+		return PlayerSpeed.onSavegameSaved(...)
+	end)
 
 	for _, stateClass in ipairs({PlayerStateWalk, PlayerStateJump, PlayerStateCrouch, PlayerStateFall, PlayerStateSwim}) do
 		stateClass.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(stateClass.calculateDesiredHorizontalVelocity, function(...)
