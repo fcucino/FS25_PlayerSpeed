@@ -18,6 +18,10 @@ function PlayerSpeedDev:consoleCommandReload()
 
 	source(modDirectory .. "PlayerSpeed.lua")
 
+	-- Log the speed messages other mods receive
+	g_messageCenter:unsubscribeAll(PlayerSpeedDev)
+	g_messageCenter:subscribe(MessageType.PLAYER_SPEED_CHANGED, PlayerSpeedDev.onPlayerSpeedChanged, PlayerSpeedDev)
+
 	if wasLoaded then
 		g_playerSpeed = PlayerSpeed.new()
 		if g_localPlayer ~= nil and g_localPlayer.inputComponent ~= nil then
@@ -27,6 +31,10 @@ function PlayerSpeedDev:consoleCommandReload()
 	end
 
 	return "[PlayerSpeed] PlayerSpeed.lua reloaded"
+end
+
+function PlayerSpeedDev:onPlayerSpeedChanged(isHandling, ratio)
+	Logging.info("[PlayerSpeed dev] PLAYER_SPEED_CHANGED isHandling=%s ratio=%s", tostring(isHandling), tostring(ratio))
 end
 
 addConsoleCommand("psReload", "Reloads PlayerSpeed (development)", "consoleCommandReload", PlayerSpeedDev)

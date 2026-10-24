@@ -16,6 +16,11 @@ PlayerSpeed.MAX_RATIOS = 10 -- ratios read from the settings file
 -- Ratios and last selected ratio, in the user's modSettings folder
 PlayerSpeed.SETTINGS_FILE = "FS25_PlayerSpeed.xml"
 
+-- Published as (isHandling, ratio) whenever the applied speed changes, see README
+if MessageType.PLAYER_SPEED_CHANGED == nil then
+	MessageType.PLAYER_SPEED_CHANGED = nextMessageTypeId()
+end
+
 local PlayerSpeed_mt = Class(PlayerSpeed)
 
 -- Private helpers: file-local, so not reachable from other files or mods
@@ -143,6 +148,16 @@ local function updateAccDecMltp(self, player, applyNow)
 	end
 end
 
+-- Tells other mods when the applied ratio changes
+local function publishIfChanged(self)
+	local ratio = self:getRatio()
+	if ratio == self.publishedRatio then
+		return
+	end
+	self.publishedRatio = ratio
+	g_messageCenter:publish(MessageType.PLAYER_SPEED_CHANGED, self:getIsHandlingSpeed(), ratio)
+end
+
 -- Only needs to run when cont changes or events are (re)registered, not every frame
 local function refreshActionEvents(self)
 	local canReduce = self.cont ~= 1
@@ -204,6 +219,8 @@ function PlayerSpeed.new(customMt)
 	self.accDecMltp = getTargetAccDecMltp(self)
 	self.eventIdReduce, self.eventIdIncrease = nil, nil
 	self.firstTime = true
+	-- Nothing published yet, so the first check always publishes
+	self.publishedRatio = nil
 
 	-- Template for the user to fill in
 	if not hasSettingsFile then
@@ -218,6 +235,24 @@ function PlayerSpeed:delete()
 		self:saveSettings()
 	end
 	self:unregisterActionEvents()
+	-- Tell other mods the ratio is no longer applied
+	if self.publishedRatio ~= nil and self.publishedRatio ~= 1.0 and g_messageCenter ~= nil then
+		self.publishedRatio = 1.0
+		g_messageCenter:publish(MessageType.PLAYER_SPEED_CHANGED, false, 1.0)
+	end
+end
+
+-- Ratio applied to the local player: the selected one, or 1 while super speed is on
+function PlayerSpeed:getRatio()
+	if isSuperSpeedActive(g_localPlayer) then
+		return 1.0
+	end
+	return self.ratio
+end
+
+-- Whether PlayerSpeed changes the local player speed right now
+function PlayerSpeed:getIsHandlingSpeed()
+	return math.abs(self:getRatio() - 1.0) >= RATIO_EPSILON
 end
 
 -- Writes the ratios back and remembers the selected ratio
@@ -305,6 +340,7 @@ function PlayerSpeed:setCont(cont, applyNow)
 	self.ratio = self.ratios[cont]
 	updateAccDecMltp(self, getControlledPlayer(), applyNow)
 	refreshActionEvents(self)
+	publishIfChanged(self)
 end
 
 function PlayerSpeed:update(dt)
@@ -315,6 +351,8 @@ function PlayerSpeed:update(dt)
 
 	-- Apply a deferred lower acceleration once the player has stopped (or left the on-foot state)
 	updateAccDecMltp(self, player)
+	-- Also catches super speed being switched on or off
+	publishIfChanged(self)
 
 	if player == nil or (g_gui ~= nil and g_gui:getIsGuiVisible()) then
 		return
