@@ -10,7 +10,7 @@ local PlayerSpeedDev = {}
 -- psReload: sources PlayerSpeed.lua again and recreates the instance, keeping the selected ratio
 function PlayerSpeedDev:consoleCommandReload()
 	local wasLoaded = g_playerSpeed ~= nil
-	local cont = wasLoaded and g_playerSpeed.cont or nil
+	local ratio = wasLoaded and g_playerSpeed.ratio or nil
 	if wasLoaded then
 		g_playerSpeed:delete()
 		g_playerSpeed = nil
@@ -23,10 +23,10 @@ function PlayerSpeedDev:consoleCommandReload()
 		if g_localPlayer ~= nil and g_localPlayer.inputComponent ~= nil then
 			g_playerSpeed:registerActionEvents()
 		end
-		g_playerSpeed:setCont(math.min(cont, g_playerSpeed.ratiosLen), true)
+		g_playerSpeed:setCont(g_playerSpeed:findRatioIndex(ratio), true)
 	end
 
-	return "PlayerSpeed: PlayerSpeed.lua reloaded"
+	return "[PlayerSpeed] PlayerSpeed.lua reloaded"
 end
 
 addConsoleCommand("psReload", "Reloads PlayerSpeed (development)", "consoleCommandReload", PlayerSpeedDev)

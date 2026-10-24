@@ -6,9 +6,14 @@
 -- v1.1.0.0 		Fix slow start and stop with high speeds
 
 PlayerSpeed = {}
-PlayerSpeed.RATIOS = {0.2, 0.5, 0.7, 1.0, 3.0, 8.0, 15.0} -- ratio
-PlayerSpeed.TEXT_KEYS = {"ps_slow02", "ps_slow05", "ps_slow07", "ps_x1", "ps_x3", "ps_x8", "ps_x15"}
-PlayerSpeed.DEFAULT_CONT = 4
+PlayerSpeed.DEFAULT_RATIOS = {0.2, 0.5, 0.7, 1.0, 3.0, 8.0, 15.0} -- ratio
+PlayerSpeed.STANDARD_TEXT_KEY = "ps_x1" -- text of DEFAULT_RATIO
+PlayerSpeed.CUSTOM_TEXT_KEY = "ps_custom" -- text of any other ratio
+PlayerSpeed.DEFAULT_RATIO = 1.0
+PlayerSpeed.MAX_RATIO = 100.0
+PlayerSpeed.MAX_RATIOS = 10 -- ratios read from the settings file
+-- Ratios and last selected ratio, in the user's modSettings folder
+PlayerSpeed.SETTINGS_FILE = "FS25_PlayerSpeed.xml"
 
 local PlayerSpeed_mt = Class(PlayerSpeed)
 
@@ -16,6 +21,90 @@ local PlayerSpeed_mt = Class(PlayerSpeed)
 
 -- Below this horizontal speed (m/s) the player counts as stopped
 local STOPPED_SPEED = 0.1
+
+-- Ratios closer than this count as the same ratio
+local RATIO_EPSILON = 0.001
+
+local function getSettingsDirectory()
+	return getUserProfileAppPath() .. "modSettings/"
+end
+
+local function getSettingsPath()
+	return getSettingsDirectory() .. PlayerSpeed.SETTINGS_FILE
+end
+
+-- Ratios from the settings file are rounded to 1 decimal
+local function roundRatio(ratio)
+	if ratio == nil then
+		return nil
+	end
+	return math.floor(ratio * 10 + 0.5) / 10
+end
+
+local function isValidRatio(ratio)
+	return ratio ~= nil and ratio > 0 and ratio <= PlayerSpeed.MAX_RATIO
+end
+
+-- Reads the ratios (unsorted) and the last selected ratio. Returns nil if the file can't be read
+local function loadSettings(path)
+	local xmlFile = XMLFile.load("playerSpeedSettings", path)
+	if xmlFile == nil then
+		Logging.error("[PlayerSpeed] could not parse '%s': it is not valid XML. The default ratios are used and the file is not overwritten, fix or delete it", path)
+		return nil
+	end
+	local rootName = xmlFile:getRootName()
+	if rootName ~= "playerSpeed" then
+		Logging.error("[PlayerSpeed] could not parse '%s': root element is <%s> instead of <playerSpeed>. The default ratios are used and the file is not overwritten, fix or delete it", path, tostring(rootName))
+		xmlFile:delete()
+		return nil
+	end
+	local settingsRatios = {}
+	xmlFile:iterate("playerSpeed.ratios.ratio", function(_, key)
+		local ratio = roundRatio(xmlFile:getFloat(key .. "#value"))
+		if #settingsRatios >= PlayerSpeed.MAX_RATIOS then
+			Logging.warning("[PlayerSpeed] ignored ratios after the first %d in '%s'", PlayerSpeed.MAX_RATIOS, path)
+			return false
+		elseif isValidRatio(ratio) then
+			table.insert(settingsRatios, ratio)
+		else
+			Logging.warning("[PlayerSpeed] skipped invalid ratio '%s' in '%s' (must be greater than 0 and at most %s)", tostring(xmlFile:getString(key .. "#value")), path, PlayerSpeed.MAX_RATIO)
+		end
+	end)
+	-- A missing or invalid last ratio starts with the default ratio
+	local lastRatio = roundRatio(xmlFile:getFloat("playerSpeed.lastRatio#value"))
+	if not isValidRatio(lastRatio) then
+		local lastRatioText = xmlFile:getString("playerSpeed.lastRatio#value")
+		if lastRatioText ~= nil then
+			Logging.warning("[PlayerSpeed] ignored invalid lastRatio '%s' in '%s' (must be greater than 0 and at most %s)", lastRatioText, path, PlayerSpeed.MAX_RATIO)
+		end
+		lastRatio = nil
+	end
+	xmlFile:delete()
+	return settingsRatios, lastRatio
+end
+
+-- Ratios from the settings file, sorted ascending without duplicates.
+-- The default ratios are used only if the settings file has no valid ratio
+local function buildRatios(settingsRatios)
+	local sorted = {}
+	for i, ratio in ipairs(#settingsRatios > 0 and settingsRatios or PlayerSpeed.DEFAULT_RATIOS) do
+		sorted[i] = ratio
+	end
+	table.sort(sorted)
+
+	local ratios = {}
+	for _, ratio in ipairs(sorted) do
+		local last = ratios[#ratios]
+		if last == nil or ratio - last >= RATIO_EPSILON then
+			table.insert(ratios, ratio)
+		end
+	end
+	return ratios
+end
+
+local function formatRatio(ratio)
+	return string.format("%g", math.floor(ratio / RATIO_EPSILON + 0.5) * RATIO_EPSILON)
+end
 
 local function getControlledPlayer()
 	local player = g_localPlayer
@@ -61,32 +150,110 @@ local function refreshActionEvents(self)
 	end
 end
 
+---Creates a new PlayerSpeed instance and loads or creates its settings
+-- @param table customMt Optional custom metatable, defaults to PlayerSpeed_mt
+-- @return PlayerSpeed The initialized PlayerSpeed instance
+-- @includeCode
 function PlayerSpeed.new(customMt)
-	Logging.info("PlayerSpeed: init mod...")
+	Logging.info("[PlayerSpeed] init mod...")
 	local self = setmetatable({}, customMt or PlayerSpeed_mt)
-	self.ratios = PlayerSpeed.RATIOS
-	self.ratiosLen = #self.ratios
+
+	local settingsPath = getSettingsPath()
+	local hasSettingsFile = fileExists(settingsPath)
+	local settingsRatios, lastRatio
+	if hasSettingsFile then
+		settingsRatios, lastRatio = loadSettings(settingsPath)
+		-- A settings file that can't be read is never overwritten
+		self.canSaveSettings = settingsRatios ~= nil
+	else
+		-- The template starts with the default ratios, for the user to customize
+		settingsRatios = {}
+		for i, ratio in ipairs(PlayerSpeed.DEFAULT_RATIOS) do
+			settingsRatios[i] = ratio
+		end
+		self.canSaveSettings = true
+	end
+	self.settingsRatios = settingsRatios or {}
+
+	self.ratios = buildRatios(self.settingsRatios)
 	-- Resolve translations once instead of every frame
 	self.texts = {}
-	for i, key in ipairs(PlayerSpeed.TEXT_KEYS) do
-		self.texts[i] = g_i18n:getText(key)
+	local standardText = g_i18n:getText(PlayerSpeed.STANDARD_TEXT_KEY)
+	local customText = g_i18n:getText(PlayerSpeed.CUSTOM_TEXT_KEY)
+	for i, ratio in ipairs(self.ratios) do
+		if math.abs(ratio - PlayerSpeed.DEFAULT_RATIO) < RATIO_EPSILON then
+			self.texts[i] = standardText
+		else
+			self.texts[i] = string.format(customText, formatRatio(ratio))
+		end
 	end
-	self.cont = PlayerSpeed.DEFAULT_CONT -- It starts with default ratio
+	self.ratiosLen = #self.ratios
+
+	-- It starts with the last selected ratio, or the default ratio
+	self.startCont = self:findRatioIndex(lastRatio or PlayerSpeed.DEFAULT_RATIO)
+	self.cont = self.startCont
 	self.ratio = self.ratios[self.cont]
 	self.accDecMltp = getTargetAccDecMltp(self)
 	self.eventIdReduce, self.eventIdIncrease = nil, nil
 	self.firstTime = true
+
+	-- Template for the user to fill in
+	if not hasSettingsFile then
+		self:saveSettings()
+	end
 	return self
 end
 
 function PlayerSpeed:delete()
+	-- Multiplayer clients don't save the savegame, so they remember the ratio when leaving
+	if g_currentMission ~= nil and not g_currentMission:getIsServer() then
+		self:saveSettings()
+	end
 	self:unregisterActionEvents()
+end
+
+-- Writes the ratios back and remembers the selected ratio
+function PlayerSpeed:saveSettings()
+	if not self.canSaveSettings then
+		return
+	end
+	createFolder(getSettingsDirectory())
+	local xmlFile = XMLFile.create("playerSpeedSettings", getSettingsPath(), "playerSpeed")
+	if xmlFile == nil then
+		return
+	end
+	xmlFile:addComment("playerSpeed", string.format(" Selectable ratios (at most %d, each greater than 0 and at most %s). Without any, the default ratios are used ",
+		PlayerSpeed.MAX_RATIOS, formatRatio(PlayerSpeed.MAX_RATIO)))
+	-- Default ratios ready to copy back into <ratios>
+	local defaultRatios = {}
+	for _, ratio in ipairs(PlayerSpeed.DEFAULT_RATIOS) do
+		table.insert(defaultRatios, string.format("<ratio value=\"%s\"/>", formatRatio(ratio)))
+	end
+	xmlFile:addComment("playerSpeed", " Default ratios: <ratios> " .. table.concat(defaultRatios, " ") .. " </ratios>")
+	for i, ratio in ipairs(self.settingsRatios) do
+		xmlFile:setFloat(string.format("playerSpeed.ratios.ratio(%d)#value", i - 1), ratio)
+	end
+	xmlFile:setFloat("playerSpeed.lastRatio#value", self.ratio)
+	xmlFile:save()
+	xmlFile:delete()
+end
+
+-- Index of the ratio closest to the given one
+function PlayerSpeed:findRatioIndex(ratio)
+	local bestIndex, bestDiff = 1, math.huge
+	for i, value in ipairs(self.ratios) do
+		local diff = math.abs(value - ratio)
+		if diff < bestDiff then
+			bestIndex, bestDiff = i, diff
+		end
+	end
+	return bestIndex
 end
 
 function PlayerSpeed:registerActionEvents()
 	-- Reset at start
 	if self.firstTime then
-		self:setCont(PlayerSpeed.DEFAULT_CONT, true)
+		self:setCont(self.startCont, true)
 		self.firstTime = false
 	end
 
@@ -162,6 +329,12 @@ function PlayerSpeed.onUnregisterActionEvents(inputComponent)
 	end
 end
 
+function PlayerSpeed.onSavegameSaved()
+	if g_playerSpeed ~= nil then
+		g_playerSpeed:saveSettings()
+	end
+end
+
 -- Shared override for every player movement state
 function PlayerSpeed.scaleVelocity(state, superFunc, directionX, directionY)
 	local speedX, speedY = superFunc(state, directionX, directionY)
@@ -225,6 +398,13 @@ if not g_playerSpeedHooksInstalled then
 	PlayerInputComponent.unregisterActionEvents = Utils.appendedFunction(PlayerInputComponent.unregisterActionEvents, function(...)
 		return PlayerSpeed.onUnregisterActionEvents(...)
 	end)
+
+	-- Remember the selected ratio whenever the game is saved
+	if FSCareerMissionInfo ~= nil then
+		FSCareerMissionInfo.saveToXMLFile = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile, function(...)
+			return PlayerSpeed.onSavegameSaved(...)
+		end)
+	end
 
 	for _, stateClass in ipairs({PlayerStateWalk, PlayerStateJump, PlayerStateCrouch, PlayerStateFall, PlayerStateSwim}) do
 		stateClass.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(stateClass.calculateDesiredHorizontalVelocity, function(...)
