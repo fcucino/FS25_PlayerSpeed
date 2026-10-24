@@ -6,6 +6,7 @@
     <elements>
         <e k="ps_x1" v="PlayerSpeed: Standard speed"/>
         <e k="ps_custom" v="PlayerSpeed: Speed x%s"/>
+        <e k="ps_othermod" v="Farmer speed not handled by PlayerSpeed"/>
 
         <e k="input_SPEEDMINUS" v="PlayerSpeed: Decrease speed"/>
         <e k="input_SPEEDPLUS" v="PlayerSpeed: Increase speed"/>

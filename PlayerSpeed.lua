@@ -9,6 +9,7 @@ PlayerSpeed = {}
 PlayerSpeed.DEFAULT_RATIOS = {0.2, 0.5, 0.7, 1.0, 3.0, 8.0, 15.0} -- ratio
 PlayerSpeed.STANDARD_TEXT_KEY = "ps_x1" -- text of DEFAULT_RATIO
 PlayerSpeed.CUSTOM_TEXT_KEY = "ps_custom" -- text of any other ratio
+PlayerSpeed.PAUSED_TEXT_KEY = "ps_othermod" -- text while super speed is on
 PlayerSpeed.DEFAULT_RATIO = 1.0
 PlayerSpeed.MAX_RATIO = 100.0
 PlayerSpeed.MAX_RATIOS = 10 -- ratios read from the settings file
@@ -114,6 +115,12 @@ local function getControlledPlayer()
 	return nil
 end
 
+-- Super speed (gsPlayerSuperSpeedToggle, also used by other mods) already scales speed and acceleration,
+-- so the ratio is paused while it is on
+local function isSuperSpeedActive(player)
+	return player ~= nil and player.isOwner and player.toggleSuperSpeedCommand ~= nil and player.toggleSuperSpeedCommand.value == true
+end
+
 -- Horizontal speed of the player (also correct in flight mode, see syncFlightVelocity)
 local function getPlayerSpeed(player)
 	return player.mover:getSpeed()
@@ -188,6 +195,7 @@ function PlayerSpeed.new(customMt)
 		end
 	end
 	self.ratiosLen = #self.ratios
+	self.pausedText = g_i18n:getText(PlayerSpeed.PAUSED_TEXT_KEY)
 
 	-- It starts with the last selected ratio, or the default ratio
 	self.startCont = self:findRatioIndex(lastRatio or PlayerSpeed.DEFAULT_RATIO)
@@ -312,7 +320,11 @@ function PlayerSpeed:update(dt)
 		return
 	end
 
-	g_currentMission:addExtraPrintText(self.texts[self.cont])
+	if isSuperSpeedActive(player) then
+		g_currentMission:addExtraPrintText(self.pausedText)
+	else
+		g_currentMission:addExtraPrintText(self.texts[self.cont])
+	end
 end
 
 -- Base game hook functions forward to the current instance
@@ -339,7 +351,7 @@ end
 function PlayerSpeed.scaleVelocity(state, superFunc, directionX, directionY)
 	local speedX, speedY = superFunc(state, directionX, directionY)
 	local ratio = g_playerSpeed ~= nil and g_playerSpeed.ratio
-	if ratio then
+	if ratio and not isSuperSpeedActive(state.player) then
 		return speedX*ratio, speedY*ratio
 	end
 	return speedX, speedY
@@ -348,7 +360,7 @@ end
 -- Faster start and stop at high ratios, only for the local player
 function PlayerSpeed.scaleAcceleration(mover, superFunc)
 	local value = superFunc(mover)
-	if g_playerSpeed ~= nil and mover.player.isOwner then
+	if g_playerSpeed ~= nil and mover.player.isOwner and not isSuperSpeedActive(mover.player) then
 		return value * g_playerSpeed.accDecMltp
 	end
 	return value
@@ -372,7 +384,7 @@ end
 -- with the same acceleration and deceleration as on foot
 function PlayerSpeed.syncFlightVelocity(mover, superFunc, dt)
 	local player = mover.player
-	if not mover.isFlightActive or g_playerSpeed == nil or not player.isOwner or player.inputComponent == nil then
+	if not mover.isFlightActive or g_playerSpeed == nil or not player.isOwner or player.inputComponent == nil or isSuperSpeedActive(player) then
 		return superFunc(mover, dt)
 	end
 	local walkState = player.stateMachine.states.onFoot.states.walking

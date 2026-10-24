@@ -6,6 +6,7 @@
     <elements>
         <e k="ps_x1" v="PlayerSpeed: Velocidad normal"/>
         <e k="ps_custom" v="PlayerSpeed: Velocidad x%s"/>
+        <e k="ps_othermod" v="La velocidad no está controlada por PlayerSpeed"/>
 
         <e k="input_SPEEDMINUS" v="PlayerSpeed: Reducir la velocidad"/>
         <e k="input_SPEEDPLUS" v="PlayerSpeed: Aumenta la velocidad"/>
