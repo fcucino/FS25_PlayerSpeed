@@ -6,10 +6,10 @@
 -- v1.1.0.0 		Fix slow start and stop with high speeds
 
 PlayerSpeed = {}
-PlayerSpeed.DEFAULT_RATIOS = {0.2, 0.5, 0.7, 1.0, 3.0, 8.0, 15.0} -- ratio
-PlayerSpeed.STANDARD_TEXT_KEY = "ps_x1" -- text of DEFAULT_RATIO
-PlayerSpeed.CUSTOM_TEXT_KEY = "ps_custom" -- text of any other ratio
-PlayerSpeed.PAUSED_TEXT_KEY = "ps_othermod" -- text while the ratio is paused
+PlayerSpeed.DEFAULT_RATIOS = { 0.2, 0.5, 0.7, 1.0, 3.0, 8.0, 15.0 } -- ratio
+PlayerSpeed.STANDARD_TEXT_KEY = "ps_x1"                           -- text of DEFAULT_RATIO
+PlayerSpeed.CUSTOM_TEXT_KEY = "ps_custom"                         -- text of any other ratio
+PlayerSpeed.PAUSED_TEXT_KEY = "ps_othermod"                       -- text while the ratio is paused
 PlayerSpeed.DEFAULT_RATIO = 1.0
 PlayerSpeed.MAX_RATIO = 100.0
 PlayerSpeed.MAX_RATIOS = 10 -- ratios read from the settings file
@@ -55,12 +55,16 @@ end
 local function loadSettings(path)
 	local xmlFile = XMLFile.load("playerSpeedSettings", path)
 	if xmlFile == nil then
-		Logging.error("[PlayerSpeed] could not parse '%s': it is not valid XML. The default ratios are used and the file is not overwritten, fix or delete it", path)
+		Logging.error(
+		"[PlayerSpeed] could not parse '%s': it is not valid XML. The default ratios are used and the file is not overwritten, fix or delete it",
+			path)
 		return nil
 	end
 	local rootName = xmlFile:getRootName()
 	if rootName ~= "playerSpeed" then
-		Logging.error("[PlayerSpeed] could not parse '%s': root element is <%s> instead of <playerSpeed>. The default ratios are used and the file is not overwritten, fix or delete it", path, tostring(rootName))
+		Logging.error(
+		"[PlayerSpeed] could not parse '%s': root element is <%s> instead of <playerSpeed>. The default ratios are used and the file is not overwritten, fix or delete it",
+			path, tostring(rootName))
 		xmlFile:delete()
 		return nil
 	end
@@ -73,7 +77,8 @@ local function loadSettings(path)
 		elseif isValidRatio(ratio) then
 			table.insert(settingsRatios, ratio)
 		else
-			Logging.warning("[PlayerSpeed] skipped invalid ratio '%s' in '%s' (must be greater than 0 and at most %s)", tostring(xmlFile:getString(key .. "#value")), path, PlayerSpeed.MAX_RATIO)
+			Logging.warning("[PlayerSpeed] skipped invalid ratio '%s' in '%s' (must be greater than 0 and at most %s)",
+				tostring(xmlFile:getString(key .. "#value")), path, PlayerSpeed.MAX_RATIO)
 		end
 	end)
 	-- A missing or invalid last ratio starts with the default ratio
@@ -81,7 +86,9 @@ local function loadSettings(path)
 	if not isValidRatio(lastRatio) then
 		local lastRatioText = xmlFile:getString("playerSpeed.lastRatio#value")
 		if lastRatioText ~= nil then
-			Logging.warning("[PlayerSpeed] ignored invalid lastRatio '%s' in '%s' (must be greater than 0 and at most %s)", lastRatioText, path, PlayerSpeed.MAX_RATIO)
+			Logging.warning(
+			"[PlayerSpeed] ignored invalid lastRatio '%s' in '%s' (must be greater than 0 and at most %s)", lastRatioText,
+				path, PlayerSpeed.MAX_RATIO)
 		end
 		lastRatio = nil
 	end
@@ -123,7 +130,8 @@ end
 -- Super speed (gsPlayerSuperSpeedToggle, also used by other mods) already scales speed and acceleration,
 -- so the ratio is paused while it is on
 local function isSuperSpeedActive(player)
-	return player ~= nil and player.isOwner and player.toggleSuperSpeedCommand ~= nil and player.toggleSuperSpeedCommand.value == true
+	return player ~= nil and player.isOwner and player.toggleSuperSpeedCommand ~= nil and
+	player.toggleSuperSpeedCommand.value == true
 end
 
 -- Some hand tools (e.g. modded chainsaws) make the farmer faster on their own
@@ -279,8 +287,10 @@ function PlayerSpeed:saveSettings()
 	if xmlFile == nil then
 		return
 	end
-	xmlFile:addComment("playerSpeed", string.format(" Selectable ratios (at most %d, each greater than 0 and at most %s). Without any, the default ratios are used ",
-		PlayerSpeed.MAX_RATIOS, formatRatio(PlayerSpeed.MAX_RATIO)))
+	xmlFile:addComment("playerSpeed",
+		string.format(
+			" Selectable ratios (at most %d, each greater than 0 and at most %s). Without any, the default ratios are used ",
+			PlayerSpeed.MAX_RATIOS, formatRatio(PlayerSpeed.MAX_RATIO)))
 	-- Default ratios ready to copy back into <ratios>
 	local defaultRatios = {}
 	for _, ratio in ipairs(PlayerSpeed.DEFAULT_RATIOS) do
@@ -315,9 +325,11 @@ function PlayerSpeed:registerActionEvents()
 	end
 
 	g_inputBinding:beginActionEventsModification(PlayerInputComponent.INPUT_CONTEXT_NAME)
-	local valid, eventId = g_inputBinding:registerActionEvent(InputAction.SPEEDMINUS, self, self.reduceSpeed, false, true, false, true, -1, true) --
+	local valid, eventId = g_inputBinding:registerActionEvent(InputAction.SPEEDMINUS, self, self.reduceSpeed, false, true,
+		false, true, -1, true)                                                                                                                 --
 	self.eventIdReduce = valid and eventId or nil
-	valid, eventId = g_inputBinding:registerActionEvent(InputAction.SPEEDPLUS, self, self.incrementSpeed, false, true, false, true, 1, true) --
+	valid, eventId = g_inputBinding:registerActionEvent(InputAction.SPEEDPLUS, self, self.incrementSpeed, false, true,
+		false, true, 1, true)                                                                                                                  --
 	self.eventIdIncrease = valid and eventId or nil
 	g_inputBinding:endActionEventsModification()
 	refreshActionEvents(self)
@@ -404,7 +416,7 @@ function PlayerSpeed.scaleVelocity(state, superFunc, directionX, directionY)
 	local speedX, speedY = superFunc(state, directionX, directionY)
 	local ratio = g_playerSpeed ~= nil and g_playerSpeed.ratio
 	if ratio and not isRatioPaused(state.player) then
-		return speedX*ratio, speedY*ratio
+		return speedX * ratio, speedY * ratio
 	end
 	return speedX, speedY
 end
@@ -436,7 +448,8 @@ local function calculateGroundSpeed(player, walkState)
 	local maxWalkSpeed = walkState:getMaximumWalkSpeed()
 	local runMultiplier = player:getRunMultiplier()
 	if input.runAxis > 0 and runMultiplier > 0 then
-		return player.mover:calculateSmoothSpeed(input.runAxis * input.walkAxis * runMultiplier, false, maxWalkSpeed, walkState:getMaximumRunSpeed())
+		return player.mover:calculateSmoothSpeed(input.runAxis * input.walkAxis * runMultiplier, false, maxWalkSpeed,
+			walkState:getMaximumRunSpeed())
 	end
 	return player.mover:calculateSmoothSpeed(input.walkAxis * player:getWalkMultiplier(), false, 0, maxWalkSpeed)
 end
@@ -465,12 +478,14 @@ end
 if not g_playerSpeedHooksInstalled then
 	g_playerSpeedHooksInstalled = true
 
-	PlayerInputComponent.registerActionEvents = Utils.appendedFunction(PlayerInputComponent.registerActionEvents, function(...)
-		return PlayerSpeed.onRegisterActionEvents(...)
-	end)
-	PlayerInputComponent.unregisterActionEvents = Utils.appendedFunction(PlayerInputComponent.unregisterActionEvents, function(...)
-		return PlayerSpeed.onUnregisterActionEvents(...)
-	end)
+	PlayerInputComponent.registerActionEvents = Utils.appendedFunction(PlayerInputComponent.registerActionEvents,
+		function(...)
+			return PlayerSpeed.onRegisterActionEvents(...)
+		end)
+	PlayerInputComponent.unregisterActionEvents = Utils.appendedFunction(PlayerInputComponent.unregisterActionEvents,
+		function(...)
+			return PlayerSpeed.onUnregisterActionEvents(...)
+		end)
 
 	-- Remember the selected ratio whenever the game is saved successfully.
 	-- Runs once the save has finished, so an error here can't break the save itself
@@ -482,8 +497,9 @@ if not g_playerSpeedHooksInstalled then
 		return PlayerSpeed.allowRunning(...)
 	end)
 
-	for _, stateClass in ipairs({PlayerStateWalk, PlayerStateJump, PlayerStateCrouch, PlayerStateFall, PlayerStateSwim}) do
-		stateClass.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(stateClass.calculateDesiredHorizontalVelocity, function(...)
+	for _, stateClass in ipairs({ PlayerStateWalk, PlayerStateJump, PlayerStateCrouch, PlayerStateFall, PlayerStateSwim }) do
+		stateClass.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(
+		stateClass.calculateDesiredHorizontalVelocity, function(...)
 			return PlayerSpeed.scaleVelocity(...)
 		end)
 	end
