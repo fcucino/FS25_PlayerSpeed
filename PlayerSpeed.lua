@@ -2,23 +2,33 @@
 
 -- FS17 refactor, FS19, FS22 and FS25 by *TurboStar*
 
--- v1.0.0.0  		Initial FS25 release
--- v1.1.0.0 		Fix slow start and stop with high speeds
+-- v1.0.0.0
+--   - First release for FS25
+-- v1.1.0.0
+--   - Fix slow start and stop with high speeds
+-- v1.2.0.0
+--   - Customize your preferred farmer multipliers in the file modSettings/FS25_PlayerSpeed.xml
+--   - Your last speed is kept when you save the game
+--   - Your speed also works in flight mode
+--   - The farmer no longer slides far when you slow down while walking
+--   - You can run while holding a chainsaw
+--   - The mod pauses while another speed boost is active (super speed, PowerTools, fast modded chainsaws)
+--   - Player Speed publishes its status so that other mods can subscribe to messages
 
 PlayerSpeed = {}
 PlayerSpeed.DEFAULT_RATIOS = { 0.2, 0.5, 0.7, 1.0, 3.0, 8.0, 15.0 } -- ratio
-PlayerSpeed.STANDARD_TEXT_KEY = "ps_x1"                           -- text of DEFAULT_RATIO
-PlayerSpeed.CUSTOM_TEXT_KEY = "ps_custom"                         -- text of any other ratio
-PlayerSpeed.PAUSED_TEXT_KEY = "ps_othermod"                       -- text while the ratio is paused
+PlayerSpeed.STANDARD_TEXT_KEY = "ps_x1"                             -- text of DEFAULT_RATIO
+PlayerSpeed.CUSTOM_TEXT_KEY = "ps_custom"                           -- text of any other ratio
+PlayerSpeed.PAUSED_TEXT_KEY = "ps_othermod"                         -- text while the ratio is paused
 PlayerSpeed.DEFAULT_RATIO = 1.0
-PlayerSpeed.MAX_RATIO = 100.0
+PlayerSpeed.MAX_RATIO = 50.0
 PlayerSpeed.MAX_RATIOS = 10 -- ratios read from the settings file
 -- Ratios and last selected ratio, in the user's modSettings folder
 PlayerSpeed.SETTINGS_FILE = "FS25_PlayerSpeed.xml"
 
 -- Published as (isHandling, ratio) whenever the applied speed changes, see README
-if MessageType.PLAYER_SPEED_CHANGED == nil then
-	MessageType.PLAYER_SPEED_CHANGED = nextMessageTypeId()
+if MessageType.MOD_PLAYER_SPEED_CHANGED == nil then
+	MessageType.MOD_PLAYER_SPEED_CHANGED = nextMessageTypeId()
 end
 
 local PlayerSpeed_mt = Class(PlayerSpeed)
@@ -56,14 +66,14 @@ local function loadSettings(path)
 	local xmlFile = XMLFile.load("playerSpeedSettings", path)
 	if xmlFile == nil then
 		Logging.error(
-		"[PlayerSpeed] could not parse '%s': it is not valid XML. The default ratios are used and the file is not overwritten, fix or delete it",
+			"[PlayerSpeed] could not parse '%s': it is not valid XML. The default ratios are used and the file is not overwritten, fix or delete it",
 			path)
 		return nil
 	end
 	local rootName = xmlFile:getRootName()
 	if rootName ~= "playerSpeed" then
 		Logging.error(
-		"[PlayerSpeed] could not parse '%s': root element is <%s> instead of <playerSpeed>. The default ratios are used and the file is not overwritten, fix or delete it",
+			"[PlayerSpeed] could not parse '%s': root element is <%s> instead of <playerSpeed>. The default ratios are used and the file is not overwritten, fix or delete it",
 			path, tostring(rootName))
 		xmlFile:delete()
 		return nil
@@ -87,7 +97,8 @@ local function loadSettings(path)
 		local lastRatioText = xmlFile:getString("playerSpeed.lastRatio#value")
 		if lastRatioText ~= nil then
 			Logging.warning(
-			"[PlayerSpeed] ignored invalid lastRatio '%s' in '%s' (must be greater than 0 and at most %s)", lastRatioText,
+				"[PlayerSpeed] ignored invalid lastRatio '%s' in '%s' (must be greater than 0 and at most %s)",
+				lastRatioText,
 				path, PlayerSpeed.MAX_RATIO)
 		end
 		lastRatio = nil
@@ -131,7 +142,7 @@ end
 -- so the ratio is paused while it is on
 local function isSuperSpeedActive(player)
 	return player ~= nil and player.isOwner and player.toggleSuperSpeedCommand ~= nil and
-	player.toggleSuperSpeedCommand.value == true
+		player.toggleSuperSpeedCommand.value == true
 end
 
 -- Some hand tools (e.g. modded chainsaws) make the farmer faster on their own
@@ -170,14 +181,18 @@ local function updateAccDecMltp(self, player, applyNow)
 	end
 end
 
--- Tells other mods when the applied ratio changes
+-- Tells other mods when the applied ratio changes. While paused, the ratio is published as nil
 local function publishIfChanged(self)
-	local ratio = self:getRatio()
-	if ratio == self.publishedRatio then
+	local ratio = nil
+	if not isRatioPaused(g_localPlayer) then
+		ratio = self.ratio
+	end
+	if self.hasPublished and ratio == self.publishedRatio then
 		return
 	end
+	self.hasPublished = true
 	self.publishedRatio = ratio
-	g_messageCenter:publish(MessageType.PLAYER_SPEED_CHANGED, self:getIsHandlingSpeed(), ratio)
+	g_messageCenter:publish(MessageType.MOD_PLAYER_SPEED_CHANGED, self:getIsHandlingSpeed(), ratio)
 end
 
 -- Only needs to run when cont changes or events are (re)registered, not every frame
@@ -242,6 +257,7 @@ function PlayerSpeed.new(customMt)
 	self.eventIdReduce, self.eventIdIncrease = nil, nil
 	self.firstTime = true
 	-- Nothing published yet, so the first check always publishes
+	self.hasPublished = false
 	self.publishedRatio = nil
 
 	-- Template for the user to fill in
@@ -258,9 +274,10 @@ function PlayerSpeed:delete()
 	end
 	self:unregisterActionEvents()
 	-- Tell other mods the ratio is no longer applied
+	-- Nothing to tell when it was at the standard speed or paused (ratio nil)
 	if self.publishedRatio ~= nil and self.publishedRatio ~= 1.0 and g_messageCenter ~= nil then
 		self.publishedRatio = 1.0
-		g_messageCenter:publish(MessageType.PLAYER_SPEED_CHANGED, false, 1.0)
+		g_messageCenter:publish(MessageType.MOD_PLAYER_SPEED_CHANGED, false, 1.0)
 	end
 end
 
@@ -326,10 +343,10 @@ function PlayerSpeed:registerActionEvents()
 
 	g_inputBinding:beginActionEventsModification(PlayerInputComponent.INPUT_CONTEXT_NAME)
 	local valid, eventId = g_inputBinding:registerActionEvent(InputAction.SPEEDMINUS, self, self.reduceSpeed, false, true,
-		false, true, -1, true)                                                                                                                 --
+		false, true, -1, true)
 	self.eventIdReduce = valid and eventId or nil
 	valid, eventId = g_inputBinding:registerActionEvent(InputAction.SPEEDPLUS, self, self.incrementSpeed, false, true,
-		false, true, 1, true)                                                                                                                  --
+		false, true, 1, true)
 	self.eventIdIncrease = valid and eventId or nil
 	g_inputBinding:endActionEventsModification()
 	refreshActionEvents(self)
@@ -499,9 +516,9 @@ if not g_playerSpeedHooksInstalled then
 
 	for _, stateClass in ipairs({ PlayerStateWalk, PlayerStateJump, PlayerStateCrouch, PlayerStateFall, PlayerStateSwim }) do
 		stateClass.calculateDesiredHorizontalVelocity = Utils.overwrittenFunction(
-		stateClass.calculateDesiredHorizontalVelocity, function(...)
-			return PlayerSpeed.scaleVelocity(...)
-		end)
+			stateClass.calculateDesiredHorizontalVelocity, function(...)
+				return PlayerSpeed.scaleVelocity(...)
+			end)
 	end
 
 	local function scaleAcceleration(...)

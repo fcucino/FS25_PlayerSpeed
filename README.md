@@ -32,18 +32,18 @@ At the first start the mod creates `modSettings/FS25_PlayerSpeed.xml` in the gam
 </playerSpeed>
 ```
 
-- `ratios`: the selectable speeds. The file starts with the default ones (`0.2 0.5 0.7 1 3 8 15`); edit, add or remove them freely. Up to 10 values, each greater than 0 and at most 100, rounded to 1 decimal; invalid values and those after the 10th are skipped with a warning in `log.txt`. If the file is not valid XML, the default speeds are used, an error is written to `log.txt` and the file is not overwritten. Without any valid value, the default speeds are used.
+- `ratios`: the selectable speeds. The file starts with the default ones (`0.2 0.5 0.7 1 3 8 15`); edit, add or remove them freely. Up to 10 values, each greater than 0 and at most 50, rounded to 1 decimal; invalid values and those after the 10th are skipped with a warning in `log.txt`. If the file is not valid XML, the default speeds are used, an error is written to `log.txt` and the file is not overwritten. Without any valid value, the default speeds are used.
 - `lastRatio`: the last selected speed. It is stored when you save the game (multiplayer clients: when leaving the game) and restored at the next start.
 
 ## For mod authors
-PlayerSpeed publishes `MessageType.PLAYER_SPEED_CHANGED` through `g_messageCenter` whenever the ratio applied to the local farmer changes, with two arguments:
+PlayerSpeed publishes `MessageType.MOD_PLAYER_SPEED_CHANGED` through `g_messageCenter` whenever the ratio applied to the local farmer changes, with two arguments:
 - `isHandling`: `true` when PlayerSpeed changes the farmer speed (ratio other than 1). It is `false` at the standard speed, while the game's super speed is on or a hand tool that makes the farmer faster is held (PlayerSpeed pauses then) and when the savegame is closed.
-- `ratio`: the applied ratio (1 when not handling).
+- `ratio`: the applied ratio: 1 at the standard speed and when the savegame is closed, `nil` while PlayerSpeed is paused.
 
 ```lua
 -- PlayerSpeed may not be installed
-if MessageType.PLAYER_SPEED_CHANGED ~= nil then
-    g_messageCenter:subscribe(MessageType.PLAYER_SPEED_CHANGED, function(self, isHandling, ratio)
+if MessageType.MOD_PLAYER_SPEED_CHANGED ~= nil then
+    g_messageCenter:subscribe(MessageType.MOD_PLAYER_SPEED_CHANGED, function(self, isHandling, ratio)
         -- ...
     end, myObject)
 end

@@ -20,7 +20,7 @@ function PlayerSpeedDev:consoleCommandReload()
 
 	-- Log the speed messages other mods receive
 	g_messageCenter:unsubscribeAll(PlayerSpeedDev)
-	g_messageCenter:subscribe(MessageType.PLAYER_SPEED_CHANGED, PlayerSpeedDev.onPlayerSpeedChanged, PlayerSpeedDev)
+	g_messageCenter:subscribe(MessageType.MOD_PLAYER_SPEED_CHANGED, PlayerSpeedDev.onPlayerSpeedChanged, PlayerSpeedDev)
 
 	if wasLoaded then
 		g_playerSpeed = PlayerSpeed.new()
@@ -34,7 +34,7 @@ function PlayerSpeedDev:consoleCommandReload()
 end
 
 function PlayerSpeedDev:onPlayerSpeedChanged(isHandling, ratio)
-	Logging.info("[PlayerSpeed dev] PLAYER_SPEED_CHANGED isHandling=%s ratio=%s", tostring(isHandling), tostring(ratio))
+	Logging.info("[PlayerSpeed dev] MOD_PLAYER_SPEED_CHANGED isHandling=%s ratio=%s", tostring(isHandling), tostring(ratio))
 end
 
 addConsoleCommand("psReload", "Reloads PlayerSpeed (development)", "consoleCommandReload", PlayerSpeedDev)
