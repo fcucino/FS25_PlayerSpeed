@@ -294,13 +294,28 @@ function PlayerSpeed:getIsHandlingSpeed()
 	return math.abs(self:getRatio() - 1.0) >= RATIO_EPSILON
 end
 
--- Writes the ratios back and remembers the selected ratio
+-- Remembers the selected ratio. An existing file only gets its lastRatio updated, so ratios edited
+-- while the game is running are kept. The ratios are written only when the template is created
 function PlayerSpeed:saveSettings()
 	if not self.canSaveSettings then
 		return
 	end
+	local settingsPath = getSettingsPath()
+	if fileExists(settingsPath) then
+		local xmlFile = XMLFile.load("playerSpeedSettings", settingsPath)
+		if xmlFile == nil then
+			return
+		end
+		-- A settings file that can't be read is never overwritten
+		if xmlFile:getRootName() == "playerSpeed" then
+			xmlFile:setFloat("playerSpeed.lastRatio#value", self.ratio)
+			xmlFile:save()
+		end
+		xmlFile:delete()
+		return
+	end
 	createFolder(getSettingsDirectory())
-	local xmlFile = XMLFile.create("playerSpeedSettings", getSettingsPath(), "playerSpeed")
+	local xmlFile = XMLFile.create("playerSpeedSettings", settingsPath, "playerSpeed")
 	if xmlFile == nil then
 		return
 	end
