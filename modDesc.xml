@@ -1,83 +1,173 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="94" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://validation.gdn.giants-software.com/xml/fs25/modDesc.xsd">
-	<author>*TurboStar*</author>
-	<version>1.1.0.0</version>
-	<title>
-		<en>Player Speed</en>
-		<de>Spieler Geschwindigkeit</de>
-	</title>
-	<description>
-		<en><![CDATA[This mod allows you to set different farmer's movement speeds.
-Available speeds: x0.2, x0.5, x0.7, standard, x3, x8, x15
+<modDesc descVersion="115" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://validation.gdn.giants-software.com/xml/fs25/modDesc.xsd">
+    <author>*TurboStar*</author>
+    <version>1.2.0.0</version>
+    <title>
+        <en>Player Speed</en>
+    </title>
+    <description>
+        <en><![CDATA[This mod lets you change the farmer's movement speed by a selectable ratio.
+Default multipliers: x0.2, x0.5, x0.7, standard, x3, x8, x15
 
 Hotkeys:
-- Increase the speed with keyboard B
-- Decrease the speed with keyboard V
+- Increase the speed multiplier with keyboard B
+- Decrease the speed multiplier with keyboard V
+
+Custom multipliers:
+The file modSettings/FS25_PlayerSpeed.xml (in the game's user folder) is created at the first start. It lists the selectable multipliers (up to 10, each greater than 0 and at most 50) applied to the farmer's standard speed: edit, add or remove them freely, e.g. <ratio value="25"/> makes the farmer 25 times faster. Without any valid multiplier, the default ones are used. The last selected multiplier is stored there when you save the game and restored at the next start.
 
 Warnings:
 - you could encounter visual glitches, but they should not affect the performance nor savegame;
-- it is suggested to change the player speed while the farmer is not moving.
 
-Changelog v1.1.0.0:
+Changelog:
+v1.2.0.0
+- Customize your preferred farmer multipliers in the file modSettings/FS25_PlayerSpeed.xml
+- Your last speed is kept when you save the game
+- Your speed also works in flight mode
+- The farmer no longer slides far when you slow down while walking
+- You can run while holding a chainsaw
+- The mod pauses while another speed boost is active (super speed, PowerTools, fast modded chainsaws)
+- Player Speed publishes its status so that other mods can subscribe to messages
+
+v1.1.0.0
 - Fix slow start and stop with high speeds
 
 Github: https://github.com/fcucino/FS25_PlayerSpeed
-]]>
-		</en>
-		<de><![CDATA[Mit diesem Mod können Sie die Bewegungsgeschwindigkeit der Bauern unterschiedlich einstellen.
-Verfügbare Geschwindigkeiten: x0.2, x0.5, x0.7, standard, x3, x8, x15
+]]></en>
+        <de><![CDATA[Mit diesem Mod können Sie die Bewegungsgeschwindigkeit des Bauern um einen wählbaren Faktor ändern.
+Standardfaktoren: x0.2, x0.5, x0.7, standard, x3, x8, x15
 
 Tastenkombinationen:
-- Erhöhen Sie die Geschwindigkeit mit der Tastatur B
-- Verringern Sie die Geschwindigkeit mit der Tastatur V
+- Erhöhen Sie den Geschwindigkeitsfaktor mit der Tastatur B
+- Verringern Sie den Geschwindigkeitsfaktor mit der Tastatur V
+
+Eigene Faktoren:
+Die Datei modSettings/FS25_PlayerSpeed.xml (im Benutzerordner des Spiels) wird beim ersten Start erstellt. Sie enthält die wählbaren Faktoren (bis zu 10, jeweils größer als 0 und höchstens 50), mit denen die normale Geschwindigkeit des Bauern multipliziert wird: Sie können sie frei ändern, hinzufügen oder entfernen, z. B. macht <ratio value="25"/> den Bauern 25-mal schneller. Ohne gültigen Faktor werden die Standardwerte verwendet. Der zuletzt gewählte Faktor wird beim Speichern dort abgelegt und beim nächsten Start wiederhergestellt.
 
 Warnungen:
 - Es kann zu visuellen Störungen kommen, die aber weder die Leistung noch den Spielstand beeinträchtigen sollten;
-- es wird empfohlen, die Geschwindigkeit des Spielers zu ändern, wenn sich der Bauer nicht bewegt.
 
-Änderungsliste v1.1.0.0:
+Änderungsliste:
+v1.2.0.0
+- Passe deine bevorzugten Faktoren des Bauern in der Datei modSettings/FS25_PlayerSpeed.xml an
+- Deine letzte Geschwindigkeit bleibt beim Speichern erhalten
+- Deine Geschwindigkeit gilt auch im Flugmodus
+- Der Bauer rutscht nicht mehr weit, wenn du beim Gehen langsamer wirst
+- Mit einer Kettensäge in der Hand kannst du rennen
+- Der Mod pausiert, solange ein anderer Geschwindigkeitsschub aktiv ist (Supergeschwindigkeit, PowerTools, schnelle Mod-Kettensägen)
+- Player Speed veröffentlicht seinen Status, damit andere Mods Nachrichten abonnieren können
+
+v1.1.0.0
 - Behebung des langsamen Starts und Stopps bei hohen Geschwindigkeiten
 
 Github: https://github.com/fcucino/FS25_PlayerSpeed
-]]>
-		</de>
-		<fr><![CDATA[Ce mod vous permet de définir la vitesse de déplacement des différents fermiers.
-Vitesses disponibles: x0.2, x0.5, x0.7, standard, x3, x8, x15
+]]></de>
+        <fr><![CDATA[Ce mod vous permet de modifier la vitesse de déplacement du fermier par un coefficient au choix.
+Multiplicateurs par défaut: x0.2, x0.5, x0.7, standard, x3, x8, x15
 
 Touches de raccourci:
-- Augmenter la vitesse avec le clavier B
-- Diminuer la vitesse avec le clavier V
+- Augmenter le multiplicateur de vitesse avec le clavier B
+- Diminuer le multiplicateur de vitesse avec le clavier V
+
+Multiplicateurs personnalisés:
+Le fichier modSettings/FS25_PlayerSpeed.xml (dans le dossier utilisateur du jeu) est créé au premier démarrage. Il contient les multiplicateurs sélectionnables (jusqu'à 10, chacun supérieur à 0 et au maximum 50) appliqués à la vitesse normale du fermier : modifiez, ajoutez ou supprimez-les librement, par ex. <ratio value="25"/> rend le fermier 25 fois plus rapide. Sans multiplicateur valide, ceux par défaut sont utilisés. Le dernier multiplicateur choisi y est enregistré lors de la sauvegarde et restauré au démarrage suivant.
 
 Avertissements:
 - il est possible que vous rencontriez des problèmes visuels, mais ils ne devraient pas affecter les performances ni les sauvegardes ;
-- il est conseillé de modifier la vitesse du joueur lorsque le fermier ne se déplace pas.
 
-Changelog v1.1.0.0:
+Changelog :
+v1.2.0.0
+- Personnalisez vos multiplicateurs préférés du fermier dans le fichier modSettings/FS25_PlayerSpeed.xml
+- Votre dernière vitesse est conservée quand vous sauvegardez
+- Votre vitesse fonctionne aussi en mode vol
+- Le fermier ne glisse plus loin quand vous ralentissez en marchant
+- Vous pouvez courir avec une tronçonneuse en main
+- Le mod se met en pause pendant qu'un autre bonus de vitesse est actif (super vitesse, PowerTools, tronçonneuses moddées rapides)
+- Player Speed publie son état pour que les autres mods puissent s'abonner à ses messages
+
+v1.1.0.0
 - Correction du démarrage lent et de l'arrêt à grande vitesse
 
 Github: https://github.com/fcucino/FS25_PlayerSpeed
-]]>
-		</fr>
-	</description>
+]]></fr>
+        <it><![CDATA[Questa mod ti permette di modificare la velocità di movimento del giocatore con un fattore a scelta.
+Moltiplicatori predefiniti: x0.2, x0.5, x0.7, standard, x3, x8, x15
 
-	<iconFilename>icon_playerSpeed.png</iconFilename>
-	<l10n filenamePrefix="i18n/locale" />
-	<multiplayer supported="true" />
-	<extraSourceFiles>
-		<sourceFile filename="PlayerSpeed.lua" />
-		<sourceFile filename="PlayerSpeedListener.lua" />
-	</extraSourceFiles>
+Comandi:
+- Aumenta il moltiplicatore di velocità con il tasto B
+- Diminuisci il moltiplicatore di velocità con il tasto V
 
-	<actions>
-		<action name="SPEEDMINUS" />
-		<action name="SPEEDPLUS" />
-	</actions>
-	<inputBinding>
-		<actionBinding action="SPEEDMINUS">
-			<binding device="KB_MOUSE_DEFAULT" input="KEY_v" />
-		</actionBinding>
-		<actionBinding action="SPEEDPLUS">
-			<binding device="KB_MOUSE_DEFAULT" input="KEY_b" />
-		</actionBinding>
-	</inputBinding>
+Moltiplicatori personalizzati:
+Il file modSettings/FS25_PlayerSpeed.xml (nella cartella utente del gioco) viene creato al primo avvio. Contiene i moltiplicatori selezionabili (fino a 10, ciascuno maggiore di 0 e al massimo 50) applicati alla velocità normale del giocatore: puoi modificarli, aggiungerli o rimuoverli liberamente, ad es. <ratio value="25"/> rende il giocatore 25 volte più veloce. Senza alcun moltiplicatore valido vengono usati quelli predefiniti. L'ultimo moltiplicatore selezionato viene memorizzato lì quando salvi la partita e ripristinato all'avvio successivo.
+
+Avvertenze:
+- potresti riscontrare dei glitch visivi, ma non dovrebbero influire né sulle prestazioni né sul salvataggio;
+
+Changelog:
+v1.2.0.0
+- Personalizza i tuoi moltiplicatori preferiti del giocatore nel file modSettings/FS25_PlayerSpeed.xml
+- La tua ultima velocità viene mantenuta quando salvi la partita
+- La tua velocità funziona anche in modalità volo
+- Il giocatore non scivola più lontano quando rallenti mentre cammini
+- Puoi correre mentre tieni in mano una motosega
+- La mod si mette in pausa mentre è attivo un altro potenziamento di velocità (super velocità, PowerTools, motoseghe modificate veloci)
+- Player Speed pubblica il suo stato così che altre mod possano iscriversi ai messaggi
+
+v1.1.0.0
+- Corretti l'avvio e l'arresto lenti alle alte velocità
+
+Github: https://github.com/fcucino/FS25_PlayerSpeed
+]]></it>
+        <es><![CDATA[Este mod te permite cambiar la velocidad de movimiento del granjero mediante un factor a elegir.
+Multiplicadores predeterminados: x0.2, x0.5, x0.7, estándar, x3, x8, x15
+
+Teclas rápidas:
+- Aumenta el multiplicador de velocidad con la tecla B
+- Disminuye el multiplicador de velocidad con la tecla V
+
+Multiplicadores personalizados:
+El archivo modSettings/FS25_PlayerSpeed.xml (en la carpeta de usuario del juego) se crea en el primer inicio. Contiene los multiplicadores seleccionables (hasta 10, cada uno mayor que 0 y como máximo 50) aplicados a la velocidad normal del granjero: puedes modificarlos, añadirlos o eliminarlos libremente, p. ej. <ratio value="25"/> hace al granjero 25 veces más rápido. Si no hay ningún multiplicador válido, se usan los predeterminados. El último multiplicador seleccionado se guarda ahí al guardar la partida y se restaura en el siguiente inicio.
+
+Advertencias:
+- podrías encontrar fallos visuales, pero no deberían afectar al rendimiento ni a la partida guardada;
+
+Registro de cambios:
+v1.2.0.0
+- Personaliza tus multiplicadores preferidos del granjero en el archivo modSettings/FS25_PlayerSpeed.xml
+- Tu última velocidad se conserva al guardar la partida
+- Tu velocidad también funciona en modo vuelo
+- El granjero ya no se desliza lejos cuando reduces la velocidad mientras caminas
+- Puedes correr mientras sostienes una motosierra
+- El mod se pausa mientras otro aumento de velocidad está activo (supervelocidad, PowerTools, motosierras modificadas rápidas)
+- Player Speed publica su estado para que otros mods puedan suscribirse a sus mensajes
+
+v1.1.0.0
+- Corregidos el arranque y la parada lentos a altas velocidades
+
+Github: https://github.com/fcucino/FS25_PlayerSpeed
+]]></es>
+    </description>
+
+    <iconFilename>icon_playerSpeed.png</iconFilename>
+    <l10n filenamePrefix="i18n/locale"/>
+    <multiplayer supported="true"/>
+    <extraSourceFiles>
+        <sourceFile filename="PlayerSpeed.lua"/>
+        <sourceFile filename="PlayerSpeedListener.lua"/>
+        <!-- Development helpers -->
+        <sourceFile filename="PlayerSpeedDev.lua"/>
+    </extraSourceFiles>
+
+    <actions>
+        <action name="SPEEDMINUS"/>
+        <action name="SPEEDPLUS"/>
+    </actions>
+    <inputBinding>
+        <actionBinding action="SPEEDMINUS">
+            <binding device="KB_MOUSE_DEFAULT" input="KEY_v"/>
+        </actionBinding>
+        <actionBinding action="SPEEDPLUS">
+            <binding device="KB_MOUSE_DEFAULT" input="KEY_b"/>
+        </actionBinding>
+    </inputBinding>
 </modDesc>
